@@ -2,7 +2,6 @@ import logging
 import os
 import re
 import json
-import certifi
 import requests
 import cloudscraper
 from bs4 import BeautifulSoup
@@ -13,29 +12,6 @@ import azure.functions as func
 
 # Konfiguracja logowania
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
-def set_ssl_cert():
-    """
-    Funkcja dynamicznie ustawia zmienną SSL_CERT_FILE na certyfikat dostarczony przez certifi,
-    chyba że już jest ustawiona lub działa w środowisku Azure Functions.
-    """
-    try:
-        if os.getenv('WEBSITE_INSTANCE_ID'):  # Azure Functions environment
-            logging.info("Środowisko Azure Functions - domyślna obsługa SSL")
-        else:
-            current_cert = os.environ.get('SSL_CERT_FILE')
-            if current_cert:
-                logging.info(f"SSL_CERT_FILE już ustawione: {current_cert}")
-            else:
-                cert_path = certifi.where()
-                os.environ['SSL_CERT_FILE'] = cert_path
-                logging.info(f"Ustawiono SSL_CERT_FILE: {cert_path}")
-    except Exception as e:
-        logging.error(f"Błąd podczas ustawiania SSL_CERT_FILE: {e}")
-
-
-# Ustaw SSL_CERT_FILE na początku działania aplikacji
-set_ssl_cert()
 
 
 class ScraperStrategy:
@@ -196,4 +172,4 @@ def timer_trigger(myTimer: func.TimerRequest) -> None:
     azure_saver = AzureBlobSaver(azure_connection_string, container_name)
     azure_saver.save_to_blob_storage(combined_articles, blob_name)
 
-    logging.info('Zakończono działanie Azure Function')
+    logging.info('Zakończono działanie Azure Function.')
