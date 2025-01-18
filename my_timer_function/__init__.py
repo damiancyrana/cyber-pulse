@@ -167,10 +167,10 @@ def timer_trigger(myTimer: func.TimerRequest) -> None:
 
     # Zapis do Azure Blob Storage
     azure_connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
-    container_name = os.getenv("AZURE_STORAGE_CONTAINER_NAME", "default-container")
+    container_name = os.getenv("AZURE_STORAGE_CONTAINER_NAME", "cybernews")
     blob_name = f"{today_date}_cyber_articles.json"
 
     azure_saver = AzureBlobSaver(azure_connection_string, container_name)
     azure_saver.save_to_blob_storage(combined_articles, blob_name)
 
-    logging.info('Zakończono działanie Azure Function.')
+    logging.info('Zakończono działanie Azure Function')
