@@ -126,11 +126,12 @@ class AzureBlobSaver:
             logging.error(f"Błąd podczas zapisywania danych do Blob Storage: {e}")
 
 
-# Azure Function Timer Trigger
+# Zaktualizowane Azure Functions
 app = func.FunctionApp()
 
+@app.function_name(name="my_timer_function")
 @app.timer_trigger(schedule="0 0 */12 * * *", arg_name="myTimer", run_on_startup=False, use_monitor=False)
-def timer_trigger(myTimer: func.TimerRequest) -> None:
+def main(myTimer: func.TimerRequest) -> None:
     logging.info('Rozpoczęcie działania Azure Function.')
 
     if myTimer.past_due:
