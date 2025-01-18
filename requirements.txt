@@ -1,0 +1,5 @@
+certifi
+requests
+cloudscraper
+beautifulsoup4
+azure-storage-blob
