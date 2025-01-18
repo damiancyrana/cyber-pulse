@@ -7,6 +7,6 @@
         "schedule": "0 0 */12 * * *"
       }
     ],
-    "scriptFile": "__init__.py"
+    "scriptFile": "__init__.py",
+    "authLevel": "anonymous"
   }
-  

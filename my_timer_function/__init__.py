@@ -11,8 +11,29 @@ from urllib.parse import urljoin
 from azure.storage.blob import BlobServiceClient
 import azure.functions as func
 
-# Set SSL certificate
-os.environ['SSL_CERT_FILE'] = certifi.where()
+
+def set_ssl_cert():
+    """
+    Funkcja dynamicznie ustawia zmienną SSL_CERT_FILE na certyfikat dostarczony przez certifi,
+    chyba że już jest ustawiona lub działa w środowisku Azure Functions.
+    """
+    try:
+        if os.getenv('WEBSITE_INSTANCE_ID'):  # Azure Functions environment
+            logging.info("Środowisko Azure Functions - domyślna obsługa SSL")
+        else:
+            current_cert = os.environ.get('SSL_CERT_FILE')
+            if current_cert:
+                logging.info(f"SSL_CERT_FILE już ustawione: {current_cert}")
+            else:
+                cert_path = certifi.where()
+                os.environ['SSL_CERT_FILE'] = cert_path
+                logging.info(f"Ustawiono SSL_CERT_FILE: {cert_path}")
+    except Exception as e:
+        logging.error(f"Błąd podczas ustawiania SSL_CERT_FILE: {e}")
+
+
+# Ustaw SSL_CERT_FILE na początku działania aplikacji
+set_ssl_cert()
 
 
 class ScraperStrategy:
@@ -37,13 +58,17 @@ class DarkReadingScraper(ScraperStrategy):
 
     def extract_articles(self, html_content, today_date):
         soup = BeautifulSoup(html_content, 'html.parser')
-        latest_news_section = soup.find('div', class_='LatestFeatured-ColumnList LatestFeatured-ColumnList_left', attrs={'data-testid': 'list-content'})
+        latest_news_section = soup.find(
+            'div', class_='LatestFeatured-ColumnList LatestFeatured-ColumnList_left', attrs={'data-testid': 'list-content'}
+        )
 
         if not latest_news_section:
             logging.info("Nie znaleziono sekcji 'Latest News'.")
             return []
 
-        articles = latest_news_section.find_all('div', class_='ContentPreview LatestFeatured-ContentItem LatestFeatured-ContentItem_left')
+        articles = latest_news_section.find_all(
+            'div', class_='ContentPreview LatestFeatured-ContentItem LatestFeatured-ContentItem_left'
+        )
 
         news_list = []
         for article in articles:
@@ -73,7 +98,9 @@ class DarkReadingScraper(ScraperStrategy):
     def fetch_article_content(self, article_url):
         article_html = self.fetch_html(article_url)
         soup = BeautifulSoup(article_html, 'html.parser')
-        content_section = soup.find('div', class_='ArticleBase-BodyContent ArticleBase-BodyContent_Article', attrs={'data-testid': 'article-base-body-content'})
+        content_section = soup.find(
+            'div', class_='ArticleBase-BodyContent ArticleBase-BodyContent_Article', attrs={'data-testid': 'article-base-body-content'}
+        )
 
         if not content_section:
             logging.info(f"Nie znaleziono treści artykułu na stronie: {article_url}")
@@ -123,7 +150,7 @@ def timer_trigger(myTimer: func.TimerRequest) -> None:
     hackernews_html = hackernews_scraper.fetch_html(hackernews_base_url)
 
     darkreading_articles = darkreading_scraper.extract_articles(darkreading_html, today_date)
-    hackernews_articles = hackernews_scraper.extract_articles(hackernews_html, today_date)
+    hackernews_articles = darkreading_scraper.extract_articles(hackernews_html, today_date)
 
     for article in darkreading_articles:
         logging.info(f"Pobieranie treści dla artykułu: {article['title']}")
@@ -146,5 +173,4 @@ def timer_trigger(myTimer: func.TimerRequest) -> None:
     azure_saver = AzureBlobSaver(azure_connection_string, container_name)
     azure_saver.save_to_blob_storage(combined_articles, blob_name)
 
-    logging.info('Zakończono działanie Azure Function')
-    
+    logging.info('Zakończono działanie Azure Function.')
