@@ -70,5 +70,6 @@ jobs:
             app-name: 'cyber-news-scraper'
             package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
             publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
+            scm-do-build-during-deployment: true # Wymuszenie budowania na Azure
             
 
